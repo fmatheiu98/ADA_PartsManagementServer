@@ -5,16 +5,12 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-from firebase_admin import firestore
-from google.cloud import firestore
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "ada-partsDB-firebase-adminsdk.json"
 
 creds = credentials.Certificate('computercompany-64270-firebase-adminsdk.json')
 firebase_admin.initialize_app(creds, {
     'databaseURL': 'https://computercompany-64270-default-rtdb.europe-west1.firebasedatabase.app/'
 })
-firestore_db = firestore.Client()
 
 
 def get_all_components_json():
