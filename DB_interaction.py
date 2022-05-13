@@ -45,8 +45,6 @@ def delete_component_by_id(component_id):
     print("323")
     return False
 
-
-
 """
 def get_product_by_id(product_id):
     prd = firestore_db.collection('products').document(product_id).get()
