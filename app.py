@@ -51,8 +51,8 @@ class Components(Resource):
 
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
-server = ServerThread()
-server.start()
+#server = ServerThread()
+#server.start()
 
 
 if __name__ == '__main__':
