@@ -28,7 +28,11 @@ class ServerThread(threading.Thread):
 
 class Component(Resource):
     def get(self, component_id):
-        return get_component_by_id(component_id)
+        component = get_component_by_id(component_id)
+        if component != "Not existent in DB!":
+            return component
+        else:
+            return "Not existent in DB!", 404
 
     def delete(self, component_id):
         if delete_component_by_id(component_id):
