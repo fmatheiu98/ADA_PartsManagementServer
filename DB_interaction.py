@@ -5,16 +5,52 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
+from firebase_admin import auth
+from firebase_admin.auth import InvalidIdTokenError
 from google.cloud import firestore
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "computercompany-64270-firebase-adminsdk.json"
+os.environ["FIREBASE_WEB_API_KEY"] = "AIzaSyD4L5mu4RnToo3JL-Hz3L_UzR-AuwyVgKI"
 
 creds = credentials.Certificate('computercompany-64270-firebase-adminsdk.json')
-firebase_admin.initialize_app(creds, {
-    'databaseURL': 'https://computercompany-64270-default-rtdb.europe-west1.firebasedatabase.app/'
-})
+fb_admin = firebase_admin.initialize_app(creds)
 
 firestore_db = firestore.Client()
+
+
+def verify_user_token_admin(id_token):
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+
+        for user in auth.list_users().iterate_all():
+            if user.uid == uid:
+                users_data_collection = firestore_db.collection('userData')
+                users_data = users_data_collection.stream()
+                for user_data in users_data:
+                    if user_data.to_dict()["Role"] == "Admin":
+                        return True
+        return False
+    except InvalidIdTokenError:
+        return False
+    except ValueError:
+        return False
+
+
+def verify_user_token(id_token):
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+
+        for user in auth.list_users().iterate_all():
+            if user.uid == uid:
+                return True
+        return False
+    except InvalidIdTokenError:
+        return False
+    except ValueError:
+        return False
+
 
 """
 def get_all_components_json():
