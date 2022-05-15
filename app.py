@@ -88,7 +88,6 @@ class Components(Resource):
 
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
-
 #server = ServerThread()
 #server.start()
 
