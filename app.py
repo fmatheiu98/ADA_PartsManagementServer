@@ -141,8 +141,8 @@ def getComponentsInfo(component_list):
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
 api.add_resource(Stock, '/stock/<component_id>')
-server = ServerThread()
-server.start()
+#server = ServerThread()
+#server.start()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
