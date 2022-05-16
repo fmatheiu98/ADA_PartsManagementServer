@@ -15,10 +15,7 @@ component_post_args = reqparse.RequestParser()
 component_stock_updt = reqparse.RequestParser()
 component_post_args.add_argument("component_info", type=dict, help="Component info is required!", required=True)
 component_stock_updt.add_argument("new_stock", type=int, help="New stock is required!", required=True)
-
-tokens = {
-    "eyJhbGciOiJSUzI1NiIsImtpZCI6ImJlYmYxMDBlYWRkYTMzMmVjOGZlYTU3ZjliNWJjM2E2YWIyOWY1NTUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vY29tcHV0ZXJjb21wYW55LTY0MjcwIiwiYXVkIjoiY29tcHV0ZXJjb21wYW55LTY0MjcwIiwiYXV0aF90aW1lIjoxNjUyNjM0Nzk2LCJ1c2VyX2lkIjoiRmxxOXhia1lZYU5INlBNOTY2c25GR21SWFhuMiIsInN1YiI6IkZscTl4YmtZWWFOSDZQTTk2NnNuRkdtUlhYbjIiLCJpYXQiOjE2NTI2MzQ3OTYsImV4cCI6MTY1MjYzODM5NiwiZW1haWwiOiJ0ZXN0NEB0ZXN0LmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJ0ZXN0NEB0ZXN0LmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.Ei7iKTxzrTenSpcJq3xzU7sCgtfp2jIgBBEmf1OlCHuUTMRDZ2AsmdYYw983erRE3w57npKJlk9bu22oHcW5CL5TE78n6vor7-TujRQpDDyKW9YVoQRnHTANgNZrZ0TzvX5Y4Ikuqb3dsBvMYavFPDM0ghrWVZlYDysQ6jMdssYIfiaWKh08jT_eJct6xldIXj6AK0jTvqYhLV5kBCR5TRMbi6rjqbZ0ka5DzpPoh1PcyzhdvAwj62YxxCUOtKjpoqyiBkOv8CebHOA4PVzHA8ZPkCybZ7I7Vu2YtEjUtE76KNJDP5_3WAb-eWJoNeXBx0OUZbavS-8ToxxiJdB5wQ": "john"
-}
+port = int(os.environ.get('PORT', 5000))
 
 
 @auth.verify_token
@@ -31,7 +28,7 @@ class ServerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.localServer = SimpleXMLRPCServer(("localhost", 443), logRequests=True)
+        self.localServer = SimpleXMLRPCServer(("localhost", 8080), logRequests=True)
         #component = Component()
         #self.localServer.register_function(component.get, name="get1")
         #components = Components()
@@ -149,7 +146,8 @@ server.start()
 
 
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
 
 
 
