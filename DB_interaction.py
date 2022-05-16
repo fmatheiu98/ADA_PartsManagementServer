@@ -6,7 +6,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 from firebase_admin import auth
-from firebase_admin.auth import InvalidIdTokenError
+from firebase_admin.auth import InvalidIdTokenError, ExpiredIdTokenError
 from google.cloud import firestore
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "computercompany-64270-firebase-adminsdk.json"
@@ -16,6 +16,13 @@ creds = credentials.Certificate('computercompany-64270-firebase-adminsdk.json')
 fb_admin = firebase_admin.initialize_app(creds)
 
 firestore_db = firestore.Client()
+
+
+def existing_component(component_id):
+    comp = firestore_db.collection('components').document(component_id).get()
+    if comp.to_dict() is not None:
+        return True
+    return False
 
 
 def verify_user_token_admin(id_token):
@@ -31,6 +38,8 @@ def verify_user_token_admin(id_token):
                     if user_data.to_dict()["Role"] == "Admin":
                         return True
         return False
+    except ExpiredIdTokenError:
+        return False
     except InvalidIdTokenError:
         return False
     except ValueError:
@@ -45,6 +54,8 @@ def verify_user_token(id_token):
         for user in auth.list_users().iterate_all():
             if user.uid == uid:
                 return True
+        return False
+    except ExpiredIdTokenError:
         return False
     except InvalidIdTokenError:
         return False
@@ -117,3 +128,21 @@ def delete_component_by_id(component_id):
         firestore_db.collection('components').document(component_id).delete()
         return True
     return False
+
+
+def get_stock_for_component(component_id):
+    component = firestore_db.collection('components').document(component_id).get()
+    comp_info_dict = component.to_dict()
+    if comp_info_dict is not None:
+        return comp_info_dict['quantity']
+    return ""
+
+
+def update_stock_for_component(component_id, new_stock):
+    component = firestore_db.collection('components').document(component_id).get()
+    if component.to_dict() is not None:
+        comp = firestore_db.collection('components').document(component_id)
+        comp.update({'quantity': new_stock})
+        return True
+    return False
+

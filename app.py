@@ -12,7 +12,9 @@ api = Api(app)
 auth = HTTPTokenAuth(scheme='Bearer')
 
 component_post_args = reqparse.RequestParser()
+component_stock_updt = reqparse.RequestParser()
 component_post_args.add_argument("component_info", type=dict, help="Component info is required!", required=True)
+component_stock_updt.add_argument("new_stock", type=int, help="New stock is required!", required=True)
 
 tokens = {
     "eyJhbGciOiJSUzI1NiIsImtpZCI6ImJlYmYxMDBlYWRkYTMzMmVjOGZlYTU3ZjliNWJjM2E2YWIyOWY1NTUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vY29tcHV0ZXJjb21wYW55LTY0MjcwIiwiYXVkIjoiY29tcHV0ZXJjb21wYW55LTY0MjcwIiwiYXV0aF90aW1lIjoxNjUyNjM0Nzk2LCJ1c2VyX2lkIjoiRmxxOXhia1lZYU5INlBNOTY2c25GR21SWFhuMiIsInN1YiI6IkZscTl4YmtZWWFOSDZQTTk2NnNuRkdtUlhYbjIiLCJpYXQiOjE2NTI2MzQ3OTYsImV4cCI6MTY1MjYzODM5NiwiZW1haWwiOiJ0ZXN0NEB0ZXN0LmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJ0ZXN0NEB0ZXN0LmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.Ei7iKTxzrTenSpcJq3xzU7sCgtfp2jIgBBEmf1OlCHuUTMRDZ2AsmdYYw983erRE3w57npKJlk9bu22oHcW5CL5TE78n6vor7-TujRQpDDyKW9YVoQRnHTANgNZrZ0TzvX5Y4Ikuqb3dsBvMYavFPDM0ghrWVZlYDysQ6jMdssYIfiaWKh08jT_eJct6xldIXj6AK0jTvqYhLV5kBCR5TRMbi6rjqbZ0ka5DzpPoh1PcyzhdvAwj62YxxCUOtKjpoqyiBkOv8CebHOA4PVzHA8ZPkCybZ7I7Vu2YtEjUtE76KNJDP5_3WAb-eWJoNeXBx0OUZbavS-8ToxxiJdB5wQ": "john"
@@ -29,11 +31,12 @@ class ServerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.localServer = SimpleXMLRPCServer(("127.0.0.1", 2000), logRequests=True)
-        prd = Component()
-        self.localServer.register_function(prd.get, name="get1")
-        lst = Components()
-        self.localServer.register_function(lst.get, name="get2")
+        self.localServer = SimpleXMLRPCServer(("localhost", 8080), logRequests=True)
+        #component = Component()
+        #self.localServer.register_function(component.get, name="get1")
+        #components = Components()
+        #self.localServer.register_function(components.get, name="get2")
+        self.localServer.register_function(getComponentsInfo, name="getComponentsInfo")
 
     def run(self):
         self.localServer.serve_forever()
@@ -84,16 +87,70 @@ class Components(Resource):
                 return '' + str(new_comp_id), 201
             else:
                 return '', 401
+        else:
+            return '', 401
+
+
+class Stock(Resource):
+    def get(self, component_id):
+        if get_stock_for_component(component_id) != "":
+            return get_stock_for_component(component_id)
+        else:
+            return 'Component not existent!'
+
+    @auth.login_required
+    def put(self, component_id):
+        headers = request.headers
+        bearer = headers.get('Authorization')
+        tk_type = bearer.split()[0]
+        if tk_type == 'Bearer':
+            tk = bearer.split()[1]
+            if verify_user_token_admin(tk):
+                args = component_stock_updt.parse_args()
+                new_stock = args['new_stock']
+                return update_stock_for_component(component_id, new_stock)
+            else:
+                return '', 401
+        else:
+            return '', 401
+
+
+#XML_RPC functions
+def getComponentsInfo(component_list):
+    out_list = list()
+    for component in component_list:
+        if existing_component(component[0]):
+            comp_dict = dict()
+            crt_component_info = get_component_by_id(component[0])
+            crt_comp_name = crt_component_info['name']
+            crt_comp_id = component[0]
+            crt_comp_stock = crt_component_info['quantity']
+
+            comp_dict['name'] = crt_comp_name
+
+            if int(crt_comp_stock) == 0:
+                comp_dict['isAvailable'] = 'No'
+            else:
+                if int(crt_comp_stock) >= int(component[1]):
+                    comp_dict['isAvailable'] = 'Yes'
+                else:
+                    comp_dict['isAvailable'] = 'Partially'
+            comp_dict['productId'] = crt_comp_id
+            out_list.append(comp_dict)
+            comp_dict['count'] = crt_comp_stock
+    return out_list
 
 
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
-#server = ServerThread()
-#server.start()
+api.add_resource(Stock, '/stock/<component_id>')
+server = ServerThread()
+server.start()
 
 
 if __name__ == '__main__':
     app.run()
+
 
 
 
