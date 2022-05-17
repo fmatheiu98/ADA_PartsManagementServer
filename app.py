@@ -28,7 +28,7 @@ class ServerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.localServer = SimpleXMLRPCServer(("0.0.0.0", port), logRequests=True)
+        self.localServer = SimpleXMLRPCServer(("0.0.0.0", port+1), logRequests=True)
         #component = Component()
         #self.localServer.register_function(component.get, name="get1")
         #components = Components()
