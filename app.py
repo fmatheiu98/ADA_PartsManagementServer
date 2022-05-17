@@ -15,6 +15,11 @@ component_post_args = reqparse.RequestParser()
 component_stock_updt = reqparse.RequestParser()
 component_post_args.add_argument("component_info", type=dict, help="Component info is required!", required=True)
 component_stock_updt.add_argument("new_stock", type=int, help="New stock is required!", required=True)
+
+getComponentsInfo_args = reqparse.RequestParser()
+areComponentsAvailable_args = reqparse.RequestParser()
+getComponentsInfo_args.add_argument("component_list", type=list, help="Component list is required!", required=True)
+areComponentsAvailable_args.add_argument("component_list", type=list, help="Component list is required!", required=True)
 port = int(os.environ.get('PORT', 5000))
 
 
@@ -25,7 +30,7 @@ def verify_token(token):
 
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
-    rpc_paths = ('/', '/RPC2', '/uuu')
+    rpc_paths = ('/', '/RPC2')
 
 
 class ServerThread(threading.Thread):
@@ -118,6 +123,20 @@ class Stock(Resource):
             return '', 401
 
 
+class GetComponentsInfo(Resource):
+    def get(self):
+        args = getComponentsInfo_args.parse_args()
+        component_list = args['component_list']
+        return getComponentsInfo(component_list)
+
+
+class AreComponentsAvailable(Resource):
+    def get(self):
+        args = areComponentsAvailable_args.parse_args()
+        component_list = args['component_list']
+        return areComponentsAvailable(component_list)
+
+
 #XML_RPC functions
 def getComponentsInfo(component_list):
     out_list = list()
@@ -169,8 +188,10 @@ def areComponentsAvailable(component_list):
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
 api.add_resource(Stock, '/stock/<component_id>')
-server = ServerThread()
-server.start()
+api.add_resource(GetComponentsInfo, '/getcomponentsinfo')
+api.add_resource(AreComponentsAvailable, '/arecomponentsavailable')
+#server = ServerThread()
+#server.start()
 
 if __name__ == '__main__':
     #app.run(host="0.0.0.0", port=port)
