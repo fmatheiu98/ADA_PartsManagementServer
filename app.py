@@ -28,7 +28,7 @@ class ServerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.localServer = SimpleXMLRPCServer(("localhost", port), logRequests=True)
+        self.localServer = SimpleXMLRPCServer(("https://server-parts-ada.herokuapp.com", port), logRequests=True)
         #component = Component()
         #self.localServer.register_function(component.get, name="get1")
         #components = Components()
