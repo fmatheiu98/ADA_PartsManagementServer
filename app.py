@@ -32,7 +32,7 @@ class ServerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.localServer = SimpleXMLRPCServer(("localhost", 3000), logRequests=True, requestHandler=RequestHandler)
+        self.localServer = SimpleXMLRPCServer(("localhost", 0), logRequests=True, requestHandler=RequestHandler)
         #component = Component()
         #self.localServer.register_function(component.get, name="get1")
         #components = Components()
