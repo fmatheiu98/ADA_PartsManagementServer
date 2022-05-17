@@ -4,7 +4,7 @@ from flask import Flask, request
 from flask_restful import reqparse, abort, Api, Resource
 from flask_httpauth import HTTPTokenAuth
 from DB_interaction import *
-from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 
 app = Flask(__name__)
 api = Api(app)
@@ -24,16 +24,22 @@ def verify_token(token):
         return token
 
 
+class RequestHandler(SimpleXMLRPCRequestHandler):
+    rpc_paths = ('/', '/RPC2', '/uuu')
+
+
 class ServerThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.localServer = SimpleXMLRPCServer(("localhost", 0), logRequests=True)
+        self.localServer = SimpleXMLRPCServer(("localhost", 3000), logRequests=True, requestHandler=RequestHandler)
         #component = Component()
         #self.localServer.register_function(component.get, name="get1")
         #components = Components()
         #self.localServer.register_function(components.get, name="get2")
+        self.localServer.register_introspection_functions()
         self.localServer.register_function(getComponentsInfo, name="getComponentsInfo")
+        self.localServer.register_function(areComponentsAvailable, name="areComponentsAvailable")
 
     def run(self):
         self.localServer.serve_forever()
@@ -138,6 +144,28 @@ def getComponentsInfo(component_list):
     return out_list
 
 
+def areComponentsAvailable(component_list):
+    ok = True
+    for component in component_list:
+        if existing_component(component[0]):
+            crt_component_info = get_component_by_id(component[0])
+            crt_comp_stock = crt_component_info['quantity']
+            quantity = int(component[1])
+            if int(crt_comp_stock) < quantity:
+                ok = False
+                break
+
+    if ok:
+        for component in component_list:
+            quantity = int(component[1])
+            crt_component_info = get_component_by_id(component[0])
+            crt_comp_stock = crt_component_info['quantity']
+            update_stock_for_component(component[0], crt_comp_stock - quantity)
+        return True
+    else:
+        return False
+
+
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
 api.add_resource(Stock, '/stock/<component_id>')
@@ -145,4 +173,5 @@ server = ServerThread()
 server.start()
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=port)
+    #app.run(host="0.0.0.0", port=port)
+    app.run()
