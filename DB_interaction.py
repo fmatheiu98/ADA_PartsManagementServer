@@ -8,6 +8,7 @@ from firebase_admin import db
 from firebase_admin import auth
 from firebase_admin.auth import InvalidIdTokenError, ExpiredIdTokenError
 from google.cloud import firestore
+import requests
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "computercompany-64270-firebase-adminsdk.json"
 os.environ["FIREBASE_WEB_API_KEY"] = "AIzaSyD4L5mu4RnToo3JL-Hz3L_UzR-AuwyVgKI"
@@ -27,16 +28,20 @@ def existing_component(component_id):
 
 def verify_user_token_admin(id_token):
     try:
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
+        uid = requests.get('https://server-asm-ada.herokuapp.com/intraserver/getId', data={'token': id_token}).text
 
         for user in auth.list_users().iterate_all():
             if user.uid == uid:
+                """
                 users_data_collection = firestore_db.collection('userData')
                 users_data = users_data_collection.stream()
                 for user_data in users_data:
                     if user_data.to_dict()["Role"] == "Admin":
                         return True
+                """
+                isAdmin = requests.get('https://server-asm-ada.herokuapp.com/intraserver/isAdmin', data={'token': id_token}).text
+                if isAdmin == 'true':
+                    return True
         return False
     except ExpiredIdTokenError:
         return False
@@ -48,8 +53,7 @@ def verify_user_token_admin(id_token):
 
 def verify_user_token(id_token):
     try:
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
+        uid = requests.get('https://server-asm-ada.herokuapp.com/intraserver/getId', data={'token': id_token}).text
 
         for user in auth.list_users().iterate_all():
             if user.uid == uid:

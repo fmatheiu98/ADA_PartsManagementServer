@@ -38,10 +38,7 @@ class ServerThread(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.localServer = SimpleXMLRPCServer(("localhost", 0), logRequests=True, requestHandler=RequestHandler)
-        #component = Component()
-        #self.localServer.register_function(component.get, name="get1")
-        #components = Components()
-        #self.localServer.register_function(components.get, name="get2")
+
         self.localServer.register_introspection_functions()
         self.localServer.register_function(getComponentsInfo, name="getComponentsInfo")
         self.localServer.register_function(areComponentsAvailable, name="areComponentsAvailable")
