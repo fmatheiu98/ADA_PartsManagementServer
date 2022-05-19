@@ -20,6 +20,11 @@ getComponentsInfo_args = reqparse.RequestParser()
 areComponentsAvailable_args = reqparse.RequestParser()
 getComponentsInfo_args.add_argument("component_list", type=list, help="Component list is required!", required=True)
 areComponentsAvailable_args.add_argument("component_list", type=list, help="Component list is required!", required=True)
+
+compare_components = reqparse.RequestParser()
+compare_components.add_argument("component1_id", type=str, help="First component id is required!", required=True)
+compare_components.add_argument("component2_id", type=str, help="First component id is required!", required=True)
+
 port = int(os.environ.get('PORT', 5000))
 
 
@@ -120,6 +125,12 @@ class Stock(Resource):
             return '', 401
 
 
+class ComponentsCompare(Resource):
+    def get(self):
+        args = compare_components.parse_args()
+        return compare_components_func(args['component1_id'], args['component2_id'])
+
+
 class GetComponentsInfo(Resource):
     def get(self):
         args = getComponentsInfo_args.parse_args()
@@ -187,6 +198,7 @@ api.add_resource(Components, '/components')
 api.add_resource(Stock, '/stock/<component_id>')
 api.add_resource(GetComponentsInfo, '/getcomponentsinfo')
 api.add_resource(AreComponentsAvailable, '/arecomponentsavailable')
+api.add_resource(ComponentsCompare, '/compare_components')
 #server = ServerThread()
 #server.start()
 

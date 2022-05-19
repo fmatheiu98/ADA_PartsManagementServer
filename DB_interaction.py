@@ -150,3 +150,64 @@ def update_stock_for_component(component_id, new_stock):
         return True
     return False
 
+
+def dict_traverse(comp_dict, comparing_dict):
+    for key, value in comp_dict.items():
+        if type(value) is dict:
+            if key not in comparing_dict:
+                comparing_dict[key] = dict()
+                for k, v in value.items():
+                    if k not in comparing_dict[key]:
+                        comparing_dict[key][k] = []
+            else:
+                for k, v in value.items():
+                    if k not in comparing_dict[key]:
+                        comparing_dict[key][k] = []
+        else:
+            if key not in comparing_dict:
+                comparing_dict[key] = []
+    return comparing_dict
+
+
+def populate_comparison_dict(comparing_dict, c_dict1, c_dict2):
+    for key, value in comparing_dict.items():
+        if type(value) is dict:
+            for k, v in value.items():
+                if k in c_dict1[key] and k in c_dict2[key]:
+                    comparing_dict[key][k] = [c_dict1[key][k], c_dict2[key][k]]
+                elif k in c_dict1[key] and k not in c_dict2[key]:
+                    comparing_dict[key][k] = [c_dict1[key][k], ""]
+                elif k not in c_dict1[key] and k in c_dict2[key]:
+                    comparing_dict[key][k] = ["", c_dict2[key][k]]
+        else:
+            if key in c_dict1 and key in c_dict2:
+                comparing_dict[key] = [c_dict1[key], c_dict2[key]]
+            elif key in c_dict1 and key not in c_dict2:
+                comparing_dict[key] = [c_dict1[key], ""]
+            elif key not in c_dict1 and key in c_dict2:
+                comparing_dict[key] = ["", c_dict2[key]]
+
+    return comparing_dict
+
+
+def compare_components_func(component1_id, component2_id):
+    component1 = firestore_db.collection('components').document(component1_id).get()
+    component2 = firestore_db.collection('components').document(component2_id).get()
+
+    result = None
+    if component1.to_dict() is not None and component2.to_dict() is not None:
+        comp1_specs = component1.to_dict()['specifications']
+        comp2_specs = component2.to_dict()['specifications']
+
+        if comp1_specs['type'] == comp2_specs['type']:
+            res1 = dict_traverse(comp1_specs, dict())
+            res2 = dict_traverse(comp2_specs, res1)
+            result = populate_comparison_dict(res2, comp1_specs, comp2_specs)
+            result['name'] = [component1.to_dict()['name'], component2.to_dict()['name']]
+            result['price'] = [component1.to_dict()['price'], component2.to_dict()['price']]
+            result['stock'] = [component1.to_dict()['quantity'], component2.to_dict()['quantity']]
+        else:
+            return {"components not of the same type!": ""}
+    return result
+
+
