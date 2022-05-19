@@ -155,6 +155,7 @@ def getComponentsInfo(component_list):
             crt_comp_name = crt_component_info['name']
             crt_comp_id = component[0]
             crt_comp_stock = crt_component_info['quantity']
+            crt_comp_price = crt_component_info['price']
 
             comp_dict['name'] = crt_comp_name
 
@@ -166,8 +167,11 @@ def getComponentsInfo(component_list):
                 else:
                     comp_dict['isAvailable'] = 'Partially'
             comp_dict['productId'] = crt_comp_id
+            comp_dict['count'] = component[1]
+            comp_dict['price'] = crt_comp_price
+
             out_list.append(comp_dict)
-            comp_dict['count'] = crt_comp_stock
+
     return out_list
 
 
