@@ -25,6 +25,9 @@ compare_components = reqparse.RequestParser()
 compare_components.add_argument("component1_id", type=str, help="First component id is required!", required=True)
 compare_components.add_argument("component2_id", type=str, help="First component id is required!", required=True)
 
+returnComponents_args = reqparse.RequestParser()
+returnComponents_args.add_argument("component_list", type=list, help="Component list is required!", required=True)
+
 port = int(os.environ.get('PORT', 5000))
 
 
@@ -145,6 +148,13 @@ class AreComponentsAvailable(Resource):
         return areComponentsAvailable(component_list)
 
 
+class ReturnComponents(Resource):
+    def get(self):
+        args = returnComponents_args.parse_args()
+        component_list = args['component_list']
+        return returnComponents(component_list)
+
+
 #XML_RPC functions
 def getComponentsInfo(component_list):
     out_list = list()
@@ -197,15 +207,32 @@ def areComponentsAvailable(component_list):
         return False
 
 
+def returnComponents(component_list):
+    ok = True
+    for component in component_list:
+        if not existing_component(component[0]):
+            ok = False
+
+    if ok:
+        for component in component_list:
+            quantity = int(component[1])
+            crt_component_info = get_component_by_id(component[0])
+            crt_comp_stock = crt_component_info['quantity']
+            update_stock_for_component(component[0], crt_comp_stock + quantity)
+        return True
+    else:
+        return False
+
+
 api.add_resource(Component, '/component/<component_id>')
 api.add_resource(Components, '/components')
 api.add_resource(Stock, '/stock/<component_id>')
 api.add_resource(GetComponentsInfo, '/getcomponentsinfo')
 api.add_resource(AreComponentsAvailable, '/arecomponentsavailable')
 api.add_resource(ComponentsCompare, '/compare_components')
+api.add_resource(ReturnComponents, '/return_components')
 #server = ServerThread()
 #server.start()
 
 if __name__ == '__main__':
-    #app.run(host="0.0.0.0", port=port)
     app.run()
