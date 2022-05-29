@@ -155,6 +155,11 @@ class ReturnComponents(Resource):
         return returnComponents(component_list)
 
 
+class GetComponentsByType(Resource):
+    def get(self, component_type):
+        return get_all_components_with_type_json(component_type)
+
+
 #XML_RPC functions
 def getComponentsInfo(component_list):
     out_list = list()
@@ -231,8 +236,10 @@ api.add_resource(GetComponentsInfo, '/getcomponentsinfo')
 api.add_resource(AreComponentsAvailable, '/arecomponentsavailable')
 api.add_resource(ComponentsCompare, '/compare_components')
 api.add_resource(ReturnComponents, '/return_components')
+api.add_resource(GetComponentsByType, '/get_components_by_type/<component_type>')
 #server = ServerThread()
 #server.start()
+
 
 if __name__ == '__main__':
     app.run()

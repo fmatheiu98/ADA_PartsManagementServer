@@ -67,37 +67,6 @@ def verify_user_token(id_token):
         return False
 
 
-"""
-def get_all_components_json():
-    components = db.reference('components').order_by_key().get()
-    print(dict(components))
-    return components
-
-
-def insert_component(comp_info_dict):
-    components = db.reference('components')
-    new_component = components.push(comp_info_dict)
-    return new_component.key
-
-
-def get_component_by_id(component_id):
-    component = db.reference('components').child(component_id).get()
-    if component is not None:
-        return component
-    else:
-        return "Not existent in DB!"
-
-
-def delete_component_by_id(component_id):
-    component = db.reference('components').child(component_id).get()
-    if component is not None:
-        db.reference('components').child(component_id).delete()
-        return True
-    return False
-
-"""
-
-
 def get_component_by_id(component_id):
     comp = firestore_db.collection('components').document(component_id).get()
     if comp.to_dict() is not None:
@@ -117,6 +86,20 @@ def get_all_components_json():
         return comps
     else:
         return "No components in the DB!"
+
+
+def get_all_components_with_type_json(component_type):
+    components = firestore_db.collection('components')
+    docs = components.stream()
+    comps = dict()
+    for doc in docs:
+        specs = doc.to_dict()['specifications']
+        if specs['type'] == component_type:
+            comps[doc.id] = doc.to_dict()
+    if len(comps) != 0:
+        return comps
+    else:
+        return "No components with that type in the DB!"
 
 
 def insert_component(comp_info_dict):
