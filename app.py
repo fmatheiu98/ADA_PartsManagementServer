@@ -5,9 +5,12 @@ from flask_restful import reqparse, abort, Api, Resource
 from flask_httpauth import HTTPTokenAuth
 from DB_interaction import *
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
+from jsonrpc.backend.flask import api
 
 app = Flask(__name__)
-api = Api(app)
+Api = Api(app)
+
+app.add_url_rule('/api', 'api', api.as_view(), methods=['POST'])
 
 auth = HTTPTokenAuth(scheme='Bearer')
 
@@ -160,7 +163,8 @@ class GetComponentsByType(Resource):
         return get_all_components_with_type_json(component_type)
 
 
-#XML_RPC functions
+#JSON-RPC functions
+@api.dispatcher.add_method
 def getComponentsInfo(component_list):
     out_list = list()
     for component in component_list:
@@ -190,6 +194,7 @@ def getComponentsInfo(component_list):
     return out_list
 
 
+@api.dispatcher.add_method
 def areComponentsAvailable(component_list):
     ok = True
     for component in component_list:
@@ -200,6 +205,8 @@ def areComponentsAvailable(component_list):
             if int(crt_comp_stock) < quantity:
                 ok = False
                 break
+        else:
+            return False
 
     if ok:
         for component in component_list:
@@ -212,6 +219,7 @@ def areComponentsAvailable(component_list):
         return False
 
 
+@api.dispatcher.add_method
 def returnComponents(component_list):
     ok = True
     for component in component_list:
@@ -229,14 +237,14 @@ def returnComponents(component_list):
         return False
 
 
-api.add_resource(Component, '/component/<component_id>')
-api.add_resource(Components, '/components')
-api.add_resource(Stock, '/stock/<component_id>')
-api.add_resource(GetComponentsInfo, '/getcomponentsinfo')
-api.add_resource(AreComponentsAvailable, '/arecomponentsavailable')
-api.add_resource(ComponentsCompare, '/compare_components')
-api.add_resource(ReturnComponents, '/return_components')
-api.add_resource(GetComponentsByType, '/get_components_by_type/<component_type>')
+Api.add_resource(Component, '/component/<component_id>')
+Api.add_resource(Components, '/components')
+Api.add_resource(Stock, '/stock/<component_id>')
+Api.add_resource(GetComponentsInfo, '/getcomponentsinfo')
+Api.add_resource(AreComponentsAvailable, '/arecomponentsavailable')
+Api.add_resource(ComponentsCompare, '/compare_components')
+Api.add_resource(ReturnComponents, '/return_components')
+Api.add_resource(GetComponentsByType, '/get_components_by_type/<component_type>')
 #server = ServerThread()
 #server.start()
 
