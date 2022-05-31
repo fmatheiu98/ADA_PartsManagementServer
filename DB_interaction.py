@@ -9,6 +9,9 @@ from firebase_admin import auth
 from firebase_admin.auth import InvalidIdTokenError, ExpiredIdTokenError
 from google.cloud import firestore
 import requests
+import pjrpc
+from pjrpc.client.backend import requests as pjrpc_client
+
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "computercompany-64270-firebase-adminsdk.json"
 os.environ["FIREBASE_WEB_API_KEY"] = "AIzaSyD4L5mu4RnToo3JL-Hz3L_UzR-AuwyVgKI"
@@ -18,6 +21,7 @@ fb_admin = firebase_admin.initialize_app(creds)
 
 firestore_db = firestore.Client()
 
+asm_client = pjrpc_client.Client('https://server-asm-ada.herokuapp.com/api/json-rpc/server')
 
 def existing_component(component_id):
     comp = firestore_db.collection('components').document(component_id).get()
@@ -28,7 +32,8 @@ def existing_component(component_id):
 
 def verify_user_token_admin(id_token):
     try:
-        uid = requests.get('https://server-asm-ada.herokuapp.com/intraserver/getId', data={'token': id_token}).text
+        #uid = requests.get('https://server-asm-ada.herokuapp.com/intraserver/getId', data={'token': id_token}).text
+        uid = (asm_client.send(pjrpc.Request('getUserID', params=[id_token], id=1))).result
 
         for user in auth.list_users().iterate_all():
             if user.uid == uid:
@@ -39,8 +44,9 @@ def verify_user_token_admin(id_token):
                     if user_data.to_dict()["Role"] == "Admin":
                         return True
                 """
-                isAdmin = requests.get('https://server-asm-ada.herokuapp.com/intraserver/isAdmin', data={'token': id_token}).text
-                if isAdmin == 'true':
+                #isAdmin = requests.get('https://server-asm-ada.herokuapp.com/intraserver/isAdmin', data={'token': id_token}).text
+                isAdmin = (asm_client.send(pjrpc.Request('isUserAdmin', params=[id_token], id=1))).result
+                if isAdmin == True:
                     return True
         return False
     except ExpiredIdTokenError:
@@ -53,7 +59,8 @@ def verify_user_token_admin(id_token):
 
 def verify_user_token(id_token):
     try:
-        uid = requests.get('https://server-asm-ada.herokuapp.com/intraserver/getId', data={'token': id_token}).text
+        #uid = requests.get('https://server-asm-ada.herokuapp.com/intraserver/getId', data={'token': id_token}).text
+        uid = (asm_client.send(pjrpc.Request('getUserID', params=[id_token], id=1))).result
 
         for user in auth.list_users().iterate_all():
             if user.uid == uid:
