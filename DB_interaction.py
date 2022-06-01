@@ -55,6 +55,8 @@ def verify_user_token_admin(id_token):
         return False
     except ValueError:
         return False
+    except pjrpc.exceptions.BaseError:
+        return False
 
 
 def verify_user_token(id_token):
@@ -71,6 +73,8 @@ def verify_user_token(id_token):
     except InvalidIdTokenError:
         return False
     except ValueError:
+        return False
+    except pjrpc.exceptions.BaseError:
         return False
 
 
